@@ -1,0 +1,324 @@
+base de datos 
+
+meta de semana 2
+rigo class
+
+
+1- Necesitamos contar con MySQL y Apache Server
+
+Descargar XAMPP
+Una vez descargado e instalado, abrimos la aplicación y nos aparece la siguiente ventana:
+
+
+Sólo tenemos que dar clic en “Start” para el MySQL y Apache Servers.
+
+2- Descargar el MySQL driver para Java
+Esta es la librería que hace posible el uso de MySQL con Java. Posee los métodos necesarios para que esto sea posible. La podemos descargar desde el siguiente enlace:
+
+MySQL Driver JDBC
+Dentro encontraremos el archivo mysql-connector-java-5.0.8-bin.jar que es el que tendremos que agregar
+a nuestro proyecto en Netbeans.
+
+
+3- Creamos un proyecto en Netbeans
+Creamos un proyecto tipo Java Application llamado MySQL_Test. Dentro vamos a agregar un JFrame y una clase.
+El JFrame lo vamos a llamar Window y la clase se llamará MySQL. Recordamos agregar la librería que descargamos
+en el paso anterior.
+
+
+
+4- Programamos la clase MySQL
+Dentro de la clase MySQL vamos a colocar todos los métodos relacionados al manejo de la base de datos
+y la conexión con el servidor. Lo primero que haremos será crear una variable global. Estas es:
+
+
+private static Connection Conexion;
+Ahora creamos un método tipo void llamado MySQLConnection(). Aquí vamos a iniciar una conexión con el servidor MySQL.
+El código es el siguiente:
+
+
+public void MySQLConnection(String user, String pass, String db_name) throws Exception {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Conexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + db_name, user, pass);
+            JOptionPane.showMessageDialog(null, "Se ha iniciado la conexión con el servidor de forma exitosa");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+Como vemos, necesitamos introducir como parámetros el nombre de usuario, la contraseña y el nombre de la base de datos. Podemos hacer una prueba en este momento. Si tenemos todo en orden, creamos una instancia de la clase MySQL en el método de la clase principal (MySQL_Test) y ejecutamos el método MySQLConnection(). Aquí está el código que se coloca en la clase principal:
+
+ public static void main(String[] args) {
+        MySQL db = new MySQL();
+        db.MySQLConnection("root", "", "");
+    }
+El nombre de usuario por defecto es root. La contraseña y nombre de la base de datos la dejamos en blanco. 
+Podemos agregar un método para finalizar la conexión con el servidor.
+
+
+ public void closeConnection() {
+        try {
+            Conexion.close();
+            JOptionPane.showMessageDialog(null, "Se ha finalizado la conexión con el servidor");
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+Ahora crearemos otro método, esta vez para crear una base de datos. Lo llamaremos createDB(). El código es el siguiente:
+
+ public void createDB(String name) {
+        try {
+            String Query = "CREATE DATABASE " + name;
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+            closeConnection();
+            MySQLConnection("root", "", name);
+JOptionPane.showMessageDialog(null, "Se ha creado la base de datos " + name + " de forma exitosa");
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+Vamos a crear un método para crear una tabla dentro de la base de datos. Lo llamaremos createTable().
+
+
+
+ public void createTable(String name) {
+        try {
+            String Query = "CREATE TABLE " + name + ""
+                    + "(ID VARCHAR(25),Nombre VARCHAR(50), Apellido VARCHAR(50),"
+                    + " Edad VARCHAR(3), Sexo VARCHAR(1))";
+ 
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+JOptionPane.showMessageDialog(null, "Se ha creado la tabla " + name + " de forma exitosa");
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+Tenemos lo que se necesita para construir una Base de Datos y una Tabla.
+Ahora hay que crear un método para introducir los registros a la tabla. Crearemos el método insertData(). El código es el siguiente:
+
+ public void insertData(String table_name, String ID, String name, String lastname, String age, String gender) {
+        try {
+            String Query = "INSERT INTO " + table_name + " VALUES("
+                    + "\"" + ID + "\", "
+                    + "\"" + name + "\", "
+                    + "\"" + lastname + "\", "
+                    + "\"" + age + "\", "
+                    + "\"" + gender + "\")";
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+            JOptionPane.showMessageDialog(null, "Datos almacenados de forma exitosa");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en el almacenamiento de datos");
+        }
+    }
+Ahora el Query posee la instrucción INSERT INTO, seguido del nombre de la tabla en la que se quiere insertar la información.
+Ahora vamos a crear un método llamado getValues() para hacer las consultas en la base de datos. 
+ public void getValues(String table_name) {
+        try {
+            String Query = "SELECT * FROM " + table_name;
+            Statement st = Conexion.createStatement();
+            java.sql.ResultSet resultSet;
+            resultSet = st.executeQuery(Query);
+ 
+            while (resultSet.next()) {
+                System.out.println("ID: " + resultSet.getString("ID") + " "
+                        + "Nombre: " + resultSet.getString("Nombre") + " " + resultSet.getString("Apellido") + " "
+                        + "Edad: " + resultSet.getString("Edad") + " "
+                        + "Sexo: " + resultSet.getString("Sexo"));
+            }
+ 
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en la adquisición de datos");
+        }
+    }
+
+Ahora le vamos a agregar un método para borrar registros.
+
+
+ public void deleteRecord(String table_name, String ID) {
+        try {
+            String Query = "DELETE FROM " + table_name + " WHERE ID = \"" + ID + "\"";
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+ 
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error borrando el registro especificado");
+        }
+    }
+
+package mysql_test;
+ 
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JOptionPane;
+ 
+public class MySQL {
+ 
+    private static Connection Conexion;
+ 
+    public void MySQLConnection(String user, String pass, String db_name) {
+        try {
+            Class.forName("com.mysql.jdbc.Driver");
+            Conexion = DriverManager.getConnection("jdbc:mysql://localhost:3306/" + db_name, user, pass);
+            System.out.println("Se ha iniciado la conexión con el servidor de forma exitosa");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+ 
+    public void closeConnection() {
+        try {
+            Conexion.close();
+            System.out.println("Se ha finalizado la conexión con el servidor");
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+ 
+    public void createDB(String name) {
+        try {
+            String Query = "CREATE DATABASE " + name;
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+            MySQLConnection("root", "", name);
+            JOptionPane.showMessageDialog(null, "Se ha creado la base de datos " + name + " de forma exitosa");
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+ 
+    public void createTable(String name) {
+        try {
+            String Query = "CREATE TABLE " + name + ""
+                    + "(ID VARCHAR(25),Nombre VARCHAR(50), Apellido VARCHAR(50),"
+                    + " Edad VARCHAR(3), Sexo VARCHAR(1))";
+            JOptionPane.showMessageDialog(null, "Se ha creado la base de tabla " + name + " de forma exitosa");
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+        } catch (SQLException ex) {
+            Logger.getLogger(MySQL.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+ 
+    public void insertData(String table_name, String ID, String name, String lastname, String age, String gender) {
+        try {
+            String Query = "INSERT INTO " + table_name + " VALUES("
+                    + "\"" + ID + "\", "
+                    + "\"" + name + "\", "
+                    + "\"" + lastname + "\", "
+                    + "\"" + age + "\", "
+                    + "\"" + gender + "\")";
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+            JOptionPane.showMessageDialog(null, "Datos almacenados de forma exitosa");
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en el almacenamiento de datos");
+        }
+    }
+ 
+    public void getValues(String table_name) {
+        try {
+            String Query = "SELECT * FROM " + table_name;
+            Statement st = Conexion.createStatement();
+            java.sql.ResultSet resultSet;
+            resultSet = st.executeQuery(Query);
+ 
+            while (resultSet.next()) {
+                System.out.println("ID: " + resultSet.getString("ID") + " "
+                        + "Nombre: " + resultSet.getString("Nombre") + " " + resultSet.getString("Apellido") + " "
+                        + "Edad: " + resultSet.getString("Edad") + " "
+                        + "Sexo: " + resultSet.getString("Sexo"));
+            }
+ 
+        } catch (SQLException ex) {
+            JOptionPane.showMessageDialog(null, "Error en la adquisición de datos");
+        }
+    }
+ 
+    public void deleteRecord(String table_name, String ID) {
+        try {
+            String Query = "DELETE FROM " + table_name + " WHERE ID = \"" + ID + "\"";
+            Statement st = Conexion.createStatement();
+            st.executeUpdate(Query);
+ 
+        } catch (SQLException ex) {
+            System.out.println(ex.getMessage());
+            JOptionPane.showMessageDialog(null, "Error borrando el registro especificado");
+        }
+    }
+ 
+}
+ 
+
+5- Creamos una interfaz gráfica
+Vamos a la clase Window.java y diseñamos una sencilla interfaz de usuario.
+
+
+
+
+
+6- Programamos la interfaz gráfica
+La prioridad de toda aplicación Java es ejecutar el método main de la clase principal. Vamos a crear una instancia para que lo primero que haga nuestro programa sea mostrarnos la ventana principal.
+Nuestro método main de la clase MySQL_Test quedaría de la siguiente forma:
+
+ public static void main(String[] args) {
+        Window w = new Window();
+        w.setVisible(true);
+    }
+
+ 
+Ahora cada vez que ejecutamos nuestro programa nos aparece la ventana principal. Vamos a programar la clase Window.java.
+Primero creamos un objeto llamado db como una instancia de la clase MySQL. En el botón “Conectar a base de Datos”  debemos colocar el siguiente código:
+
+        db.MySQLConnection("root", "", "");
+        db.createDB("MySQL_Test");
+        db.createTable("Registros");
+
+Ejecutemos el programa para ver si todo está en orden.
+
+Ahora el código que colocamos en el botón debemos cambiarlo, ya que no podemos crear una base de datos con el mismo nombre 2 veces. Ya tenemos nuestra base de datos con la tabla registros dentro, así que vamos a cambiar la programación.
+
+        db.MySQLConnection("root", "", "MySQL_Test");
+        jButtonConnect.setEnabled(false);
+        jButtonDelete.setEnabled(true);
+        jButtonGet.setEnabled(true);
+        jButtonRegister.setEnabled(true);
+
+Vemos que al iniciar la conexión se des habilita el botón de conectar y se habilitan los demás botones. A continuación el código para cada botón:
+
+Ahora vamos a cada ventana que hemos agregado y programamos los botones. Primero la ventana de borrar registros.
+En el botón de Borrar Registro colocamos:
+MySQL db = new MySQL();
+       db.MySQLConnection("root", "", "MySQL_Test");
+       db.deleteRecord("Registros", jTextFieldID.getText());
+       db.closeConnection();
+       this.dispose();
+Instanciamos la clase MySQL, luego abrimos una conexión, borramos el registro con el ID que se haya introducido en el TextField y cerramos la conexión.  Por último cerramos la ventana.
+
+Ahora vamos a la ventana de registro de datos. La programación del botón Registrar es la siguiente:
+
+MySQL db = new MySQL();
+        db.MySQLConnection("root", "", "MySQL_Test");
+        db.insertData("Registros", jTextFieldID.getText(),
+                jTextFieldNombre.getText(),
+                jTextFieldApellido.getText(),
+                jTextFieldEdad.getText(),
+                jComboBoxSexo.getSelectedItem().toString());
+        db.closeConnection();
+        this.dispose();
+Nuestro código nos queda así:
+
+Con esto hemos terminado nuestra programación. Tenemos una pequeña aplicación que nos permite registrar información en una base de datos, imprimirla y borrar ciertos registros.
+7- Probamos nuestra aplicación
+
